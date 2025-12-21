@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockApi } from '../services/mockApi';
+import projectService from '../services/projectService';
 import { useAuth } from './AuthContext';
 
 const ProjectContext = createContext();
@@ -14,7 +14,7 @@ export const ProjectProvider = ({ children }) => {
     const fetchProjects = async () => {
         setLoading(true);
         try {
-            const data = await mockApi.getProjects();
+            const data = await projectService.getAllProjects();
             setProjects(data);
         } catch (error) {
             console.error("Failed to fetch projects", error);
@@ -30,12 +30,14 @@ export const ProjectProvider = ({ children }) => {
     }, [user]);
 
     const addProject = async (projectData) => {
-        const newProject = await mockApi.createProject(projectData);
+        const newProject = await projectService.createProject(projectData);
+        // Optimistic update or refetch. 
+        // Since we return the new project from backend, we can append.
         setProjects([...projects, newProject]);
     };
 
     const updateProject = async (id, updates) => {
-        const updatedProject = await mockApi.updateProject(id, updates);
+        const updatedProject = await projectService.updateProject(id, updates);
         setProjects(projects.map(p => p.id === id ? updatedProject : p));
     };
 

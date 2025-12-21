@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockApi } from '../services/mockApi';
+import authService from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -11,7 +11,8 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const storedUser = localStorage.getItem('pms_auth_user');
-        if (storedUser) {
+        const token = localStorage.getItem('token');
+        if (storedUser && token) {
             setUser(JSON.parse(storedUser));
         }
         setLoading(false);
@@ -19,9 +20,16 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const user = await mockApi.login(email, password);
+            const data = await authService.login(email, password);
+            // Assuming response contains { user: {...}, token: "..." } based on common patterns
+            // Use debug/verification to confirm exact structure if needed. 
+            // Based on Swagger, login returns { token, user } usually, let's assume standard
+            // logic. If checking the mockApi return, it was just user.
+            // Let's implement standard JWT handling.
+            const { token, user } = data;
             setUser(user);
             localStorage.setItem('pms_auth_user', JSON.stringify(user));
+            localStorage.setItem('token', token);
             return user;
         } catch (error) {
             throw error;
@@ -31,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('pms_auth_user');
+        localStorage.removeItem('token');
     };
 
     return (

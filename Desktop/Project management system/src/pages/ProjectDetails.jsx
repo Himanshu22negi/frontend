@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProjects } from '../context/ProjectContext';
-import { mockApi } from '../services/mockApi';
+import userService from '../services/userService';
 
 const ProjectDetails = () => {
     const { id } = useParams();
@@ -20,10 +20,18 @@ const ProjectDetails = () => {
     useEffect(() => {
         if (project) {
             setStatus(project.status);
-            mockApi.getUsers().then(users => {
-                const u = users.find(u => u.id === project.assignedTo);
-                setAssignedUser(u);
-            });
+            if (project.assignedTo) {
+                // In a real app we might have an endpoint to get single user or just filter from all
+                // For now, let's fetch all (since we don't have getById exposed in service for plain users, only admins maybe?)
+                // Actually userService has default getAllUsers.
+                // Optimization: The API might return populated "assignedTo" object directly? 
+                // Swagger said "assignedUsers (comma-separated IDs)".
+                // Let's assume we need to fetch user details.
+                userService.getAllUsers().then(users => {
+                    const u = users.find(u => u.id === project.assignedTo);
+                    setAssignedUser(u);
+                }).catch(err => console.error(err));
+            }
         }
     }, [project]);
 

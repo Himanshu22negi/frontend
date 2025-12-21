@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { mockApi } from '../services/mockApi';
+import userService from '../services/userService';
 import { Plus, Mail, Shield } from 'lucide-react';
 
 const UserManagement = () => {
@@ -12,16 +12,24 @@ const UserManagement = () => {
     }, []);
 
     const loadUsers = async () => {
-        const data = await mockApi.getUsers();
-        setUsers(data);
+        try {
+            const data = await userService.getAllUsers();
+            setUsers(data);
+        } catch (error) {
+            console.error("Failed to load users", error);
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await mockApi.createUser(newUser);
-        setShowForm(false);
-        setNewUser({ name: '', email: '', password: '', role: 'user' });
-        loadUsers();
+        try {
+            await userService.createUser(newUser);
+            setShowForm(false);
+            setNewUser({ name: '', email: '', password: '', role: 'user' });
+            loadUsers();
+        } catch (error) {
+            console.error("Failed to create user", error);
+        }
     };
 
     return (
@@ -96,7 +104,7 @@ const UserManagement = () => {
                                 <td className="px-6 py-4">
                                     <div className="flex items-center space-x-3">
                                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                            {user.name.charAt(0)}
+                                            {user.name ? user.name.charAt(0) : '?'}
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">{user.name}</p>

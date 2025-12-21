@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProjects } from '../context/ProjectContext';
-import { mockApi } from '../services/mockApi';
+import userService from '../services/userService';
 
 const CreateProject = () => {
     const navigate = useNavigate();
@@ -17,7 +17,7 @@ const CreateProject = () => {
     });
 
     useEffect(() => {
-        mockApi.getUsers().then(data => setUsers(data));
+        userService.getAllUsers().then(data => setUsers(data)).catch(err => console.error(err));
     }, []);
 
     const handleSubmit = async (e) => {
