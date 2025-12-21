@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
             // Based on Swagger, login returns { token, user } usually, let's assume standard
             // logic. If checking the mockApi return, it was just user.
             // Let's implement standard JWT handling.
-            const { token, user } = data;
+            const { token, ...user } = data;
             setUser(user);
             localStorage.setItem('pms_auth_user', JSON.stringify(user));
             localStorage.setItem('token', token);
