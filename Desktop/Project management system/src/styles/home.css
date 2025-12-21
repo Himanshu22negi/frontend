@@ -1,0 +1,233 @@
+/* Home Page Styles */
+
+/* Hero Section */
+.hero-section {
+    padding: 120px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-container {
+    display: grid;
+    align-items: center;
+    gap: var(--spacing-2xl);
+}
+
+.hero-content {
+    max-width: 600px;
+}
+
+.hero-title {
+    font-family: var(--font-family-display);
+    font-size: 3.5rem;
+    line-height: 1.1;
+    font-weight: 800;
+    margin-bottom: var(--spacing-lg);
+    color: hsl(var(--color-text-main));
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-secondary)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: hsl(var(--color-text-muted));
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.btn-lg {
+    padding: 0.8rem 1.75rem;
+    font-size: 1.1rem;
+}
+
+.icon-right {
+    margin-left: var(--spacing-sm);
+}
+
+.hero-stats {
+    display: flex;
+    gap: var(--spacing-2xl);
+    border-top: 1px solid hsla(var(--color-border) / 0.5);
+    padding-top: var(--spacing-lg);
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: hsl(var(--color-text-main));
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: hsl(var(--color-text-muted));
+}
+
+/* Code Window / Hero Image */
+.hero-image {
+    position: relative;
+}
+
+.code-window {
+    background: #1e1e1e;
+    border-radius: var(--radius-md);
+    border: 1px solid hsla(var(--color-border) / 0.5);
+    box-shadow: var(--shadow-2xl);
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+    transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+    transition: transform 0.3s ease;
+}
+
+.code-window:hover {
+    transform: perspective(1000px) rotateY(0) rotateX(0);
+}
+
+.window-header {
+    background: #252526;
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #333;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.red {
+    background: #ff5f56;
+}
+
+.yellow {
+    background: #ffbd2e;
+}
+
+.green {
+    background: #27c93f;
+}
+
+.window-content {
+    padding: 20px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #d4d4d4;
+}
+
+.keyword {
+    color: #569cd6;
+}
+
+.function {
+    color: #dcdcaa;
+}
+
+.component {
+    color: #4ec9b0;
+}
+
+.glow-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, hsla(var(--color-primary) / 0.2) 0%, transparent 70%);
+    z-index: 1;
+    filter: blur(60px);
+}
+
+/* Features Section */
+.features-section {
+    padding: 100px 0;
+    background-color: hsla(var(--color-surface) / 0.3);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.section-header h2 {
+    font-family: var(--font-family-display);
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-sm);
+    color: hsl(var(--color-text-main));
+}
+
+.section-header p {
+    color: hsl(var(--color-text-muted));
+    font-size: 1.1rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: var(--spacing-lg);
+}
+
+.feature-card {
+    background: hsl(var(--color-surface));
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    border: 1px solid hsla(var(--color-border) / 0.5);
+    transition: transform var(--transition-normal);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    border-color: hsl(var(--color-primary));
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    background: hsla(var(--color-primary) / 0.1);
+    color: hsl(var(--color-primary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-sm);
+    color: hsl(var(--color-text-main));
+}
+
+.feature-card p {
+    color: hsl(var(--color-text-muted));
+    line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+    .hero-container {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
