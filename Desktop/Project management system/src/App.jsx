@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children }) => {
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
-  if (!user || user.role !== 'admin') return <Navigate to="/" />;
+  if (!user || (user.role && user.role.toLowerCase() !== 'admin')) return <Navigate to="/" />;
   return children;
 };
 

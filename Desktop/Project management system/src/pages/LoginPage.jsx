@@ -13,7 +13,8 @@ const LoginPage = () => {
         e.preventDefault();
         setError('');
         try {
-            await login(email, password);
+            var data = await login(email, password);
+            localStorage.setItem('role', data.role);
             navigate('/');
         } catch (err) {
             setError('Invalid email or password');
@@ -56,12 +57,21 @@ const LoginPage = () => {
                             required
                         />
                     </div>
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
-                    >
-                        Sign In
-                    </button>
+                    <div className="flex flex-col space-y-4">
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+                        >
+                            Sign In
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/register')}
+                            className="w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-300"
+                        >
+                            Register
+                        </button>
+                    </div>
                 </form>
                 <div className="mt-6 text-center text-sm text-gray-600">
                     <p>Admin: admin@example.com / password</p>

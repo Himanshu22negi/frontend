@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useProjects } from '../context/ProjectContext';
+// import { useProjects } from '../context/ProjectContext'; // Switching to service for consistency
+import projectService from '../services/projectService';
+import userService from '../services/userService';
 import { Briefcase, Users, CheckCircle, Clock } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
@@ -17,17 +19,36 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const { projects } = useProjects();
+    const [projects, setProjects] = useState([]);
+    const [users, setUsers] = useState([]);
 
-    const isAdmin = user?.role === 'admin';
-    const myProjects = isAdmin ? projects : projects.filter(p => p.assignedTo === user?.id);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const projectData = await projectService.getAllProjects();
+                setProjects(projectData);
 
-    const totalProjects = myProjects.length;
-    const completedProjects = myProjects.filter(p => p.status === 'Completed').length;
-    const inProgressProjects = myProjects.filter(p => p.status === 'In Progress').length;
+                if (user?.role && user.role.toLowerCase() === 'admin') {
+                    const userData = await userService.getAllUsers();
+                    setUsers(userData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+            }
+        };
+        fetchData();
+    }, [user]);
 
-    // For Admin only stats (mocked user count)
-    const totalUsers = 2; // In a real app we'd fetch this from user context/api
+    const isAdmin = user?.role && user.role.toLowerCase() === 'admin';
+
+    // Filter projects for non-admins (or show all for admin if we wanted, but let's see logic)
+    // Admin sees all projects count. User sees theirs.
+    const myProjects = isAdmin ? projects : projects.filter(p => p.assignedTo === user?.id || (p.assignedUsers && p.assignedUsers.includes(user?.id)));
+
+    const totalProjects = isAdmin ? projects.length : myProjects.length;
+    const completedProjects = myProjects.filter(p => p.status === 'completed').length;
+    const inProgressProjects = myProjects.filter(p => p.status === 'active' || p.status === 'in-progress').length;
+    const totalUsers = users.length;
 
     return (
         <div>
@@ -35,33 +56,47 @@ const Dashboard = () => {
             <p className="text-gray-500 mb-8">Here's what's happening today.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard
-                    title={isAdmin ? "Total Projects" : "My Projects"}
-                    value={totalProjects}
-                    icon={Briefcase}
-                    color="bg-blue-500"
-                />
-                <StatCard
-                    title="In Progress"
-                    value={inProgressProjects}
-                    icon={Clock}
-                    color="bg-yellow-500"
-                />
-                <StatCard
-                    title="Completed"
-                    value={completedProjects}
-                    icon={CheckCircle}
-                    color="bg-green-500"
-                />
-                {isAdmin && (
-                    <StatCard
-                        title="Total Users"
-                        value={totalUsers}
-                        icon={Users}
-                        color="bg-purple-500"
-                    />
+                {/* Admin View: Projects and Users count only */}
+                {isAdmin ? (
+                    <>
+                        <StatCard
+                            title="Total Projects"
+                            value={totalProjects}
+                            icon={Briefcase}
+                            color="bg-blue-500"
+                        />
+                        <StatCard
+                            title="Total Users"
+                            value={totalUsers}
+                            icon={Users}
+                            color="bg-purple-500"
+                        />
+                    </>
+                ) : (
+                    /* User View: My Projects, In Progress, Completed */
+                    <>
+                        <StatCard
+                            title="My Projects"
+                            value={totalProjects} // reused variable name, context represents count
+                            icon={Briefcase}
+                            color="bg-blue-500"
+                        />
+                        <StatCard
+                            title="In Progress"
+                            value={inProgressProjects}
+                            icon={Clock}
+                            color="bg-yellow-500"
+                        />
+                        <StatCard
+                            title="Completed"
+                            value={completedProjects}
+                            icon={CheckCircle}
+                            color="bg-green-500"
+                        />
+                    </>
                 )}
             </div>
+
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-xl font-bold mb-4">Recent Projects</h2>

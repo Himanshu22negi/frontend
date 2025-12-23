@@ -1,46 +1,88 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useProjects } from '../context/ProjectContext';
+// import { useProjects } from '../context/ProjectContext'; // Switching to service direct
+import projectService from '../services/projectService';
 import userService from '../services/userService';
 
 const ProjectDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { projects, updateProject } = useProjects();
-
-    const project = projects.find(p => p.id === id);
-    const [status, setStatus] = useState(project?.status);
+    // const { projects, updateProject } = useProjects(); // switch to local state for edit
+    const [project, setProject] = useState(null);
+    const [status, setStatus] = useState('');
     const [assignedUser, setAssignedUser] = useState(null);
-
-    // If project is not found immediately (e.g. reload), it might be loading. 
-    // But context loads initial data. If still undefined, display loading or not found.
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        title: '',
+        status: '',
+        attachments: ''
+    });
+    const [file, setFile] = useState(null);
 
     useEffect(() => {
-        if (project) {
-            setStatus(project.status);
-            if (project.assignedTo) {
-                // In a real app we might have an endpoint to get single user or just filter from all
-                // For now, let's fetch all (since we don't have getById exposed in service for plain users, only admins maybe?)
-                // Actually userService has default getAllUsers.
-                // Optimization: The API might return populated "assignedTo" object directly? 
-                // Swagger said "assignedUsers (comma-separated IDs)".
-                // Let's assume we need to fetch user details.
+        loadProject();
+    }, [id]);
+
+    const loadProject = async () => {
+        try {
+            const data = await projectService.getProject(id);
+            setProject(data);
+            setStatus(data.status);
+            setFormData({
+                title: data.title,
+                status: data.status,
+                attachments: '' // files reset on edit load usually
+            });
+
+            if (data.assignedTo || data.assignedUsers) {
+                // Handle single assignment logic as before or simpler
+                const userId = data.assignedTo || (Array.isArray(data.assignedUsers) ? data.assignedUsers[0] : data.assignedUsers);
+                // Fetch user logic...
                 userService.getAllUsers().then(users => {
-                    const u = users.find(u => u.id === project.assignedTo);
+                    const u = users.find(u => u.id === userId || u._id === userId);
                     setAssignedUser(u);
                 }).catch(err => console.error(err));
             }
+
+        } catch (error) {
+            console.error("Failed to load project", error);
         }
-    }, [project]);
-
-    if (!project) return <div>Project not found</div>;
-
-    const handleStatusChange = async (newStatus) => {
-        setStatus(newStatus);
-        await updateProject(id, { status: newStatus });
     };
+
+    const handleFileChange = (e) => {
+        if (e.target.files) {
+            setFile(e.target.files[0]);
+        }
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+
+        const data = new FormData();
+        data.append('title', formData.title);
+        data.append('status', formData.status);
+        if (file) {
+            data.append('attachments', file);
+        }
+
+        try {
+            await projectService.updateProject(id, data);
+            setIsEditing(false);
+            loadProject(); // Reload to show updates
+            alert("Project updated successfully");
+        } catch (error) {
+            console.error("Failed to update project", error);
+            alert("Failed to update project");
+        }
+    };
+
+    if (!project) return <div>Loading...</div>;
+
+    // Permissions: Admin can edit? User can edit? Request says "User Role id so that a user will be able to modify"
+    // Assuming both or at least the assigned user/any user (as per request "User Role").
+    const canEdit = true; // or based on role/ownership if strict
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -56,26 +98,78 @@ const ProjectDetails = () => {
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-8 border-b border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">{project.title}</h2>
-                            <p className="text-gray-500">Due Date: {project.dueDate}</p>
+                    {!isEditing ? (
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">{project.title}</h2>
+                                <p className="text-gray-500">Due Date: {project.endDate || project.dueDate}</p>
+                            </div>
+                            <div className="flex items-center space-x-4">
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium 
+                                    ${project.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                        (project.status === 'active' || project.status === 'in-progress') ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>
+                                    {project.status === 'active' || project.status === 'in-progress' ? 'In Progress' :
+                                        project.status === 'completed' ? 'Completed' : 'Pending'}
+                                </span>
+                                {canEdit && (
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                                    >
+                                        Edit
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="text-sm font-bold text-gray-600">Status:</span>
-                            <select
-                                value={status}
-                                onChange={(e) => handleStatusChange(e.target.value)}
-                                className={`px-3 py-1 rounded-full text-sm font-medium border-none focus:ring-2 focus:ring-blue-500 cursor-pointer
-                            ${status === 'Completed' ? 'bg-green-100 text-green-700' :
-                                        status === 'In Progress' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}
-                            >
-                                <option value="Pending">Pending</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Completed">Completed</option>
-                            </select>
-                        </div>
-                    </div>
+                    ) : (
+                        <form onSubmit={handleUpdate} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Title</label>
+                                <input
+                                    type="text"
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Status</label>
+                                <select
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                                    value={formData.status}
+                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                >
+                                    <option value="pending">Pending</option>
+                                    <option value="active">Active (In Progress)</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Attachments</label>
+                                <input
+                                    type="file"
+                                    className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
                 </div>
 
                 <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -92,7 +186,7 @@ const ProjectDetails = () => {
                             {assignedUser ? (
                                 <div className="flex items-center space-x-3">
                                     <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                                        {assignedUser.name.charAt(0)}
+                                        {assignedUser.name ? assignedUser.name.charAt(0) : '?'}
                                     </div>
                                     <div>
                                         <p className="font-medium text-gray-900">{assignedUser.name}</p>
@@ -105,8 +199,8 @@ const ProjectDetails = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const MainLayout = () => {
     const { user, loading } = useAuth();
+    console.log("MainLayout rendered. Current User:", user); // Debug log for user visibility
 
     if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 

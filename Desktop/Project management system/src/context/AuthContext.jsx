@@ -21,12 +21,13 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const data = await authService.login(email, password);
+            debugger;
             // Assuming response contains { user: {...}, token: "..." } based on common patterns
             // Use debug/verification to confirm exact structure if needed. 
             // Based on Swagger, login returns { token, user } usually, let's assume standard
             // logic. If checking the mockApi return, it was just user.
             // Let's implement standard JWT handling.
-            const { token, user } = data;
+            const { token, ...user } = data;
             setUser(user);
             localStorage.setItem('pms_auth_user', JSON.stringify(user));
             localStorage.setItem('token', token);

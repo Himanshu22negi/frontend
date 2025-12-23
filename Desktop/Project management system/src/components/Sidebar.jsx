@@ -5,7 +5,7 @@ import { LayoutDashboard, FolderKanban, Users, LogOut } from 'lucide-react';
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role?.toLowerCase() === 'admin';
 
     const navItems = [
         { to: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
